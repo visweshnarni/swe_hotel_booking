@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const { Schema } = mongoose;
 
 const userSchema = new mongoose.Schema(
@@ -29,15 +30,9 @@ const userSchema = new mongoose.Schema(
       type: Date,
       required: [true, 'Date of Birth is required']
     },
-    nationality: {
-      type: String,
-      enum: [
-        'Natural born Indian Citizen',
-        'Natural born British Subject',
-        'British Subject if Indian Domicile',
-        'Naturalized Indian Citizen',
-        'Subject of a Foreign Government'
-      ],
+    nationality_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'Nationality',
       required: true
     },
     email: {
@@ -63,7 +58,7 @@ const userSchema = new mongoose.Schema(
     },
     pan_upload: {
       type: String,
-      required: [true, 'PAN upload is required'] 
+      required: [true, 'PAN upload is required']
     },
     aadhaar_number: {
       type: String,
@@ -91,6 +86,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Password is required']
     },
+
     // Optional dynamic fields
     pr_bds_upload: String,
     pr_bonafide_upload: String,
@@ -128,5 +124,25 @@ const userSchema = new mongoose.Schema(
     timestamps: true
   }
 );
+
+// Hash the password before saving
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  try {
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Hide password in JSON output
+userSchema.set('toJSON', {
+  transform: function (doc, ret, options) {
+    delete ret.password;
+    return ret;
+  }
+});
+
 
 module.exports = mongoose.model('User', userSchema);

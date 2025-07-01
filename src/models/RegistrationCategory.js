@@ -18,7 +18,24 @@ const registrationCategorySchema = new Schema({
     required: [true, 'Registration Category name is required'],
     unique: true,
     trim: true
+  },
+  regular_amount: {
+    type: Number,
+    required: true
+  },
+  renewal_regular_amount: {
+    type: Number,
+    required: true
+  },
+  tatkal_amount: {
+    type: Number,
+    required: true
+  },
+  renewal_tatkal_amount: {
+    type: Number,
+    required: true
   }
+  
 }, { timestamps: true });
 
 module.exports = mongoose.model('RegistrationCategory', registrationCategorySchema);
