@@ -4,7 +4,7 @@ const RegistrationCategory = require('../models/RegistrationCategory');
 const CategoryFieldsMap = require('../utils/categoryFieldsMap');
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-const storage = multer.memoryStorage(); // ✅ Use memoryStorage
+const storage = multer.memoryStorage(); // Use memoryStorage
 
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
@@ -27,13 +27,13 @@ const dynamicUpload = async (req, res, next) => {
       const { regcategory_id } = req.body;
       if (!regcategory_id) return res.status(400).json({ error: 'regcategory_id is required' });
 
-      const category = await RegistrationCategory.findById(regcategory_id);
-      if (!category) return res.status(400).json({ error: 'Invalid regcategory_id' });
+      const regCategory = await RegistrationCategory.findById(regcategory_id);
+      if (!regCategory) return res.status(400).json({ error: 'Invalid regcategory_id' });
 
-      req.regCategoryName = category.name;
+      req.regCategoryName = regCategory.name;
 
       const baseFields = ['pan_upload', 'aadhaar_upload', 'sign_upload'];
-      const dynamicFields = (CategoryFieldsMap[category.name] || []).map(f => f.name);
+      const dynamicFields = (CategoryFieldsMap[regCategory.name] || []).map(f => f.name);
       const requiredFields = [...baseFields, ...dynamicFields];
 
       const uploadedFields = (req.files || []).map(file => file.fieldname);
@@ -46,7 +46,7 @@ const dynamicUpload = async (req, res, next) => {
         });
       }
 
-      // ✅ Save req.cleanedFormData, and raw file buffers for now
+      // Save req.cleanedFormData, and raw file buffers for now
       req.cleanedFormData = { ...req.body };
       req.fileBufferMap = {};
 

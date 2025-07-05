@@ -18,10 +18,10 @@ const seedNationalities = async () => {
     await Nationality.deleteMany({});
     const data = nationalities.map(name => ({ name }));
     await Nationality.insertMany(data);
-    console.log('✅ Nationalities seeded');
+    console.log('Nationalities seeded');
     mongoose.disconnect();
   } catch (err) {
-    console.error('❌ Seeder error:', err.message);
+    console.error('Seeder error:', err.message);
     mongoose.disconnect();
   }
 };

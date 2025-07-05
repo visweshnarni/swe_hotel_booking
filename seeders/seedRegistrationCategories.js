@@ -61,10 +61,10 @@ const seedCategories = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     await RegistrationCategory.deleteMany({});
     await RegistrationCategory.insertMany(categories);
-    console.log('✅ Categories seeded');
+    console.log('Categories seeded');
     mongoose.disconnect();
   } catch (err) {
-    console.error('❌ Seeder error:', err.message);
+    console.error('Seeder error:', err.message);
     mongoose.disconnect();
   }
 };

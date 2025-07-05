@@ -9,9 +9,16 @@ const userSchema = new mongoose.Schema(
       ref: 'RegistrationCategory',
       required: true
     },
-    fullname: {
+    fname: {
       type: String,
-      required: [true, 'Full name is required']
+      required: [true, 'First name is required']
+    },
+    mname: {
+      type: String
+    },
+    lname: {
+      type: String,
+      required: [true, 'Last name is required']
     },
     gender: {
       type: String,
@@ -21,6 +28,10 @@ const userSchema = new mongoose.Schema(
     fathername: {
       type: String,
       required: [true, 'Father\'s name is required']
+    },
+    mothername: {
+      type: String,
+      required: [true, 'Mother\'s name is required']
     },
     place: {
       type: String,
@@ -35,6 +46,16 @@ const userSchema = new mongoose.Schema(
       ref: 'Nationality',
       required: true
     },
+    category: {
+      type: String,
+      enum: [
+        'Open Category',
+        'Backward Classes', 
+        'Scheduled Castes', 
+        'Scheduled Tribes'
+      ],
+      required: [true, 'Category is required']
+    },
     email: {
       type: String,
       unique: true,
@@ -46,6 +67,9 @@ const userSchema = new mongoose.Schema(
       unique: true,
       required: [true, 'Mobile number is required'],
       match: [/^\d{10}$/, 'Mobile number must be 10 digits']
+    },
+    telephone_number: {
+      type: String,
     },
     address: {
       type: String,
@@ -86,6 +110,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Password is required']
     },
+
+    // Password reset fields
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
 
     // Optional dynamic fields
     pr_bds_upload: String,
