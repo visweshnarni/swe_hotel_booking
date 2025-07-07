@@ -15,13 +15,18 @@ const nationalities = [
 const seedNationalities = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    await Nationality.deleteMany({});
-    const data = nationalities.map(name => ({ name }));
-    await Nationality.insertMany(data);
-    console.log('Nationalities seeded');
-    mongoose.disconnect();
+    console.log('✅ MongoDB Connected for Nationality seeding');
+
+    await Nationality.deleteMany();
+    console.log('🗑️  Existing Nationalities cleared');
+
+    const formatted = nationalities.map(name => ({ name }));
+    await Nationality.insertMany(formatted);
+
+    console.log('🌍 Nationalities seeded successfully');
   } catch (err) {
-    console.error('Seeder error:', err.message);
+    console.error('❌ Nationality seeding error:', err.message);
+  } finally {
     mongoose.disconnect();
   }
 };

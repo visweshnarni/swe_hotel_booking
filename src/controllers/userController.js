@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
-const RegistrationCategory = require("../models/RegistrationCategory");
-const Nationality = require("../models/Nationality");
-const User = require("../models/User");
 const bcrypt = require('bcryptjs');
-const sendEmail = require('../utils/sendEmail');
 const crypto = require('crypto');
 
+const RegistrationCategory = require('../models/RegistrationCategory');
+const Nationality = require('../models/Nationality');
+const User = require('../models/User');
+const sendEmail = require('../utils/sendEmail');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -15,7 +15,7 @@ const generateToken = (id) => {
   });
 };
 
-// Register New User
+// ================= REGISTER NEW USER =================
 exports.registerUser = async (req, res) => {
   try {
     const {
@@ -24,11 +24,11 @@ exports.registerUser = async (req, res) => {
       email,
       mobile_number,
       password,
-      fname,
-      mname,
-      lname,
-      fathername,
-      mothername,
+      f_name,
+      m_name,
+      l_name,
+      father_name,
+      mother_name,
       place,
       dob,
       category,
@@ -38,75 +38,79 @@ exports.registerUser = async (req, res) => {
       regtype
     } = req.cleanedFormData;
 
-    if (!fname || !lname || !fathername || !mothername || !place || !dob || !category || !address || !pan_number || !aadhaar_number || !regtype) {
-      return res.status(400).json({ error: "Missing required personal information fields" });
+    // Basic required fields validation
+    if (
+      !f_name || !l_name || !father_name || !mother_name ||
+      !place || !dob || !category || !address ||
+      !pan_number || !aadhaar_number || !regtype
+    ) {
+      return res.status(400).json({ error: "Missing required personal information fields." });
     }
 
-    // Validate regcategory_id exists
+    // Validate Registration Category
     const regCategory = await RegistrationCategory.findById(regcategory_id);
-    if (!regCategory) {
-      return res.status(400).json({ error: "Invalid regcategory_id" });
-    }
-    // Validate nationality_id exists
+    if (!regCategory) return res.status(400).json({ error: "Invalid regcategory_id" });
+
+    // Validate Nationality
     const nationality = await Nationality.findById(nationality_id);
-    if (!nationality) {
-      return res.status(400).json({ error: "Invalid nationality_id" });
-    }
-    // Check if email is already used
+    if (!nationality) return res.status(400).json({ error: "Invalid nationality_id" });
+
+    // Check unique email
     const existingEmail = await User.findOne({ email });
-    if (existingEmail) {
-      return res.status(409).json({ error: "Email Already Exist" });
-    }
-    // Check if mobile number is already used
+    if (existingEmail) return res.status(409).json({ error: "Email already exists" });
+
+    // Check unique mobile number
     const existingMobile = await User.findOne({ mobile_number });
     if (existingMobile) return res.status(409).json({ error: "Mobile number already exists" });
 
-    // Enforce strong password policy (at least 8 chars)
+    // Enforce strong password policy
     if (password.length < 8) {
-      return res.status(400).json({ error: "Password must be at least 8 characters long" });
+      return res.status(400).json({ error: "Password must be at least 8 characters long." });
     }
 
-
-    // Prepare file paths before saving
-    const fullName = [fname, mname, lname].filter(Boolean).join('_');
-    const safeName = fullName.replace(/[^a-zA-Z0-9_ ]/g, '').replace(/[ ]+/g, '_');
+    // Create folder for storing files
+    const fullName = [f_name, m_name, l_name].filter(Boolean).join('_');
+    const safeName = fullName.replace(/[^a-zA-Z0-9_]/g, '').replace(/[ ]+/g, '_');
     const uploadPath = path.join(__dirname, '../uploads', safeName);
     fs.mkdirSync(uploadPath, { recursive: true });
 
+    // Save files to disk
     const updatedPaths = {};
-
     for (const [key, file] of Object.entries(req.fileBufferMap)) {
       const fileName = `${Date.now()}-${key}${path.extname(file.originalname)}`;
       const filePath = path.join(uploadPath, fileName);
       fs.writeFileSync(filePath, file.buffer);
       updatedPaths[key] = filePath;
 
-      // Inject file path into cleanedFormData using correct variable
+      // Attach file path to cleanedFormData
       req.cleanedFormData[key] = filePath;
     }
 
-    // Now create and save user with files included
+    // Create User document
     const user = new User(req.cleanedFormData);
     await user.save();
 
+    // Send welcome email
     await sendEmail({
       email: user.email,
       subject: 'Welcome to Telangana Dental Council',
-      message: `<h3>Hello,</h3><h3> ${user.fname} ${user.mname} ${user.lname},</h3><p>Thank you for registering with the TDC portal.</p>`
+      message: `
+        <h3>Hello ${user.f_name},</h3>
+        <p>Thank you for registering with the Telangana Dental Council Portal.</p>
+      `
     });
-    const token = generateToken(user._id);
 
-    console.log("Registratuon successful:...............");
+    const token = generateToken(user._id);
 
     res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message: "User registered successfully.",
       token,
       data: {
         id: user._id,
-        fname: user.fname,
-        mname: user.mname,
-        lname: user.lname,
+        f_name: user.f_name,
+        m_name: user.m_name,
+        l_name: user.l_name,
         email: user.email,
         mobile_number: user.mobile_number
       }
@@ -117,23 +121,19 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-
-// LOGIN User
+// ================= LOGIN USER =================
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  // Validate input
   if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required' });
+    return res.status(400).json({ message: 'Email and password are required.' });
   }
 
   const user = await User.findOne({ email });
-
-  if (!user) return res.status(400).json({ message: 'Invalid email or password' });
+  if (!user) return res.status(400).json({ message: 'Invalid email or password.' });
 
   const isMatch = await bcrypt.compare(password, user.password);
-
-  if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });
+  if (!isMatch) return res.status(400).json({ message: 'Invalid email or password.' });
 
   const token = generateToken(user._id);
 
@@ -142,52 +142,38 @@ exports.loginUser = async (req, res) => {
     token,
     user: {
       id: user._id,
-      fullname: `${user.fname} ${user.mname} ${user.lname}`,
+      fullname: `${user.f_name} ${user.m_name || ''} ${user.l_name}`.trim(),
       email: user.email
     }
   });
 };
 
-// GET PROFILE
+// ================= GET PROFILE =================
 exports.getProfile = async (req, res) => {
-  const user = req.user;
-
   res.status(200).json({
     success: true,
-    data: user
+    data: req.user
   });
 };
 
-// FORGOT PASSWORD 
+// ================= FORGOT PASSWORD =================
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
-
-  // 1. Find user
   const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ message: 'User not found' });
+  if (!user) return res.status(404).json({ message: 'User not found.' });
 
-  // 2. Generate reset token
   const resetToken = crypto.randomBytes(20).toString('hex');
-
-  // 3. Hash and save token to user document
   user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // expires in 15 minutes
+  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 mins
 
   await user.save({ validateBeforeSave: false });
 
-  // 4. Create reset URL
   const resetUrl = `${req.protocol}://${req.get('host')}/api/users/reset-password/${resetToken}`;
-
-  // 5. Send email
-  const fullName = [user.fname, user.mname, user.lname].filter(Boolean).join(' ');
   const message = `
-    <h3>Hello,</h3>
-    <h3>${fullName},</h3>
+    <h3>Hello ${user.f_name},</h3>
     <p>You requested to reset your password.</p>
-    <p>Please click the link below to reset:</p>
-    <a href="${resetUrl}" style="color: blue;">Reset Password</a>
-    <p>This link will expire in 15 minutes.</p>
-    <p>If you did not request this, you can ignore this email.</p>
+    <p><a href="${resetUrl}">Click here to reset your password</a></p>
+    <p>This link expires in 15 minutes.</p>
   `;
 
   try {
@@ -199,25 +185,21 @@ exports.forgotPassword = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Reset password email sent',
-      resetUrl // Optional: return this for manual testing
+      message: 'Reset password email sent.',
+      resetUrl // Useful for testing
     });
   } catch (error) {
-    console.error("Email send error:", err);
-    // Rollback token if email fails
+    console.error("Email sending error:", error);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save({ validateBeforeSave: false });
 
-    console.error('Email sending failed:', error);
-    res.status(500).json({ success: false, message: 'Failed to send reset email' });
+    res.status(500).json({ success: false, message: 'Failed to send reset email.' });
   }
 };
 
-
-// Reset Password
+// ================= RESET PASSWORD =================
 exports.resetPassword = async (req, res) => {
-  const crypto = require('crypto');
   const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
 
   const user = await User.findOne({
@@ -226,7 +208,7 @@ exports.resetPassword = async (req, res) => {
   });
 
   if (!user) {
-    return res.status(400).json({ message: 'Invalid or expired token' });
+    return res.status(400).json({ message: 'Invalid or expired token.' });
   }
 
   user.password = req.body.password;
@@ -236,20 +218,30 @@ exports.resetPassword = async (req, res) => {
 
   const token = generateToken(user._id);
 
-  res.status(200).json({ success: true, token, message: 'Password updated successfully' });
+  res.status(200).json({
+    success: true,
+    token,
+    message: 'Password updated successfully.'
+  });
 };
 
-
-// Get Registration Categories
-exports.getRegistertaionCategory = async (req, res) => {
+// ================= GET REGISTRATION CATEGORIES =================
+exports.getRegistrationCategories = async (req, res) => {
   try {
     const categories = await RegistrationCategory.find({});
-    res.json(categories);
+    res.status(200).json(categories);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch categories" });
+    res.status(500).json({ error: "Failed to fetch registration categories." });
   }
 };
 
-
-
+// ================= GET NATIONALITIES =================
+exports.getNationalities = async (req, res) => {
+  try {
+    const nationalities = await Nationality.find({});
+    res.status(200).json(nationalities);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch nationalities." });
+  }
+};
 

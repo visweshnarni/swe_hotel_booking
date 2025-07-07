@@ -59,12 +59,17 @@ const categories = [
 const seedCategories = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    await RegistrationCategory.deleteMany({});
+    console.log('✅ MongoDB Connected for Category seeding');
+
+    await RegistrationCategory.deleteMany();
+    console.log('🗑️  Existing Categories cleared');
+
     await RegistrationCategory.insertMany(categories);
-    console.log('Categories seeded');
-    mongoose.disconnect();
+
+    console.log('📚 Registration Categories seeded successfully');
   } catch (err) {
-    console.error('Seeder error:', err.message);
+    console.error('❌ Category seeding error:', err.message);
+  } finally {
     mongoose.disconnect();
   }
 };
