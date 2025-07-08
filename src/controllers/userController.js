@@ -46,7 +46,17 @@ exports.registerUser = async (req, res) => {
     ) {
       return res.status(400).json({ error: "Missing required personal information fields." });
     }
-
+    // Validate MM/YYYY format
+    const mmYYYYRegex = /^(0[1-9]|1[0-2])\/\d{4}$/;
+    // Validate BDS qualification years
+    if (req.cleanedFormData.bds_qualification_year && !mmYYYYRegex.test(req.cleanedFormData.bds_qualification_year)) {
+      return res.status(400).json({ error: "bds_qualification_year must be in MM/YYYY format" });
+    }
+    // Validate MDS qualification years
+    if (req.cleanedFormData.mds_qualification_year && !mmYYYYRegex.test(req.cleanedFormData.mds_qualification_year)) {
+      return res.status(400).json({ error: "mds_qualification_year must be in MM/YYYY format" });
+    }
+    
     // Validate Registration Category
     const regCategory = await RegistrationCategory.findById(regcategory_id);
     if (!regCategory) return res.status(400).json({ error: "Invalid regcategory_id" });

@@ -126,7 +126,10 @@ const userSchema = new Schema({
   professional_address: String,
   qualification_description: String,
   bds_university_address: String,
-  bds_qualification_year: String,
+  bds_qualification_year: {
+    type: String,
+    match: [/^(0[1-9]|1[0-2])\/\d{4}$/, 'BDS Qualification Year must be in MM/YYYY format'],
+  },
   bds_clg_address: String,
   bds_degree_upload: String,
   study_upload: String,
@@ -136,7 +139,10 @@ const userSchema = new Schema({
 
   // ------------------ Transfer MDS / MDS ------------------
   mds_university_address: String,
-  mds_qualification_year: String,
+  mds_qualification_year: {
+    type: String,
+    match: [/^(0[1-9]|1[0-2])\/\d{4}$/, 'MDS Qualification Year must be in MM/YYYY format'],
+  },
   mds_clg_address: String,
   mds_degree_upload: String,
   mds_bonafide_marks_upload: String,

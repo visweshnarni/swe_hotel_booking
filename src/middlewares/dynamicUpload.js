@@ -50,27 +50,27 @@ const dynamicUpload = async (req, res, next) => {
       // Base required files for all users
       const baseFileFields = ['pan_upload', 'aadhaar_upload', 'sign_upload'];
 
-      // Dynamic fields from categoryFieldsMap
-      const dynamicFileFields = (CategoryFieldsMap[categoryName]?.files || []).map(f => f.name);
+      const categoryFiles = CategoryFieldsMap[categoryName]?.files || [];
 
-      const requiredFiles = [...baseFileFields, ...dynamicFileFields];
+      const requiredDynamicFields = categoryFiles
+        .filter(f => !f.optional)
+        .map(f => f.name);
 
-      // Find uploaded fieldnames
+      const requiredFields = [...baseFileFields, ...requiredDynamicFields];
+
       const uploadedFields = (req.files || []).map(file => file.fieldname);
-      const missingFiles = requiredFiles.filter(field => !uploadedFields.includes(field));
+      const missingFields = requiredFields.filter(field => !uploadedFields.includes(field));
 
-      if (missingFiles.length > 0) {
+      if (missingFields.length > 0) {
         return res.status(400).json({
           error: 'Missing required files',
-          missing: missingFiles
+          missing: missingFields
         });
       }
 
-      // Clean form text fields
       req.cleanedFormData = { ...req.body };
       req.fileBufferMap = {};
 
-      // Collect file buffers into memory
       req.files.forEach(file => {
         req.fileBufferMap[file.fieldname] = file;
       });

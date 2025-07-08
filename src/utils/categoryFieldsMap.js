@@ -5,7 +5,7 @@ const CategoryFieldsMap = {
       { name: 'pr_bds_upload', maxCount: 1 },
       { name: 'pr_bonafide_upload', maxCount: 1 },
       { name: 'ssc_memo_upload', maxCount: 1 },
-      { name: 'custodian_clg_upload', maxCount: 1 }
+      { name: 'custodian_clg_upload', maxCount: 1, optional: true }
     ]
   },
 
@@ -22,9 +22,9 @@ const CategoryFieldsMap = {
       { name: 'study_upload', maxCount: 1 },
       { name: 'bds_intern_upload', maxCount: 1 },
       { name: 'pr_certificate_upload', maxCount: 1 },
-      { name: 'bds_affidavit_upload', maxCount: 1 },
+      { name: 'bds_affidavit_upload', maxCount: 1, optional: true },
       { name: 'ssc_memo_upload', maxCount: 1 },
-      { name: 'custodian_clg_upload', maxCount: 1 }
+      { name: 'custodian_clg_upload', maxCount: 1, optional: true }
     ]
   },
 
@@ -40,8 +40,8 @@ const CategoryFieldsMap = {
       { name: 'bds_degree_upload', maxCount: 1 },
       { name: 'study_upload', maxCount: 1 },
       { name: 'bds_intern_upload', maxCount: 1 },
-      { name: 'noc_dci_upload', maxCount: 1 },
-      { name: 'transfer_noc_upload', maxCount: 1 },
+      { name: 'noc_dci_upload', maxCount: 1, optional: true },
+      { name: 'transfer_noc_upload', maxCount: 1, optional: true },
       { name: 'ssc_memo_upload', maxCount: 1 }
     ]
   },
@@ -65,11 +65,11 @@ const CategoryFieldsMap = {
       { name: 'mds_degree_upload', maxCount: 1 },
       { name: 'mds_bonafide_marks_upload', maxCount: 1 },
       { name: 'curr_tdc_reg_certificate_upload', maxCount: 1 },
-      { name: 'noc_dci_upload', maxCount: 1 },
-      { name: 'transfer_noc_upload', maxCount: 1 },
+      { name: 'noc_dci_upload', maxCount: 1, optional: true },
+      { name: 'transfer_noc_upload', maxCount: 1, optional: true },
       { name: 'ssc_memo_upload', maxCount: 1 },
-      { name: 'custodian_clg_upload', maxCount: 1 },
-      { name: 'mds_affidavit_upload', maxCount: 1 }
+      { name: 'custodian_clg_upload', maxCount: 1, optional: true },
+      { name: 'mds_affidavit_upload', maxCount: 1, optional: true }
     ]
   },
 
@@ -91,9 +91,9 @@ const CategoryFieldsMap = {
       { name: 'bds_intern_upload', maxCount: 1 },
       { name: 'mds_degree_upload', maxCount: 1 },
       { name: 'mds_bonafide_marks_upload', maxCount: 1 },
-      { name: 'noc_dci_upload', maxCount: 1 },
-      { name: 'transfer_noc_upload', maxCount: 1 },
-      { name: 'custodian_clg_upload', maxCount: 1 },
+      { name: 'noc_dci_upload', maxCount: 1, optional: true },
+      { name: 'transfer_noc_upload', maxCount: 1, optional: true },
+      { name: 'custodian_clg_upload', maxCount: 1, optional: true },
       { name: 'ssc_memo_upload', maxCount: 1 }
     ]
   },
@@ -114,9 +114,9 @@ const CategoryFieldsMap = {
       { name: 'bds_intern_upload', maxCount: 1 },
       { name: 'mds_degree_upload', maxCount: 1 },
       { name: 'mds_bonafide_marks_upload', maxCount: 1 },
-      { name: 'custodian_clg_upload', maxCount: 1 },
+      { name: 'custodian_clg_upload', maxCount: 1, optional: true },
       { name: 'curr_tdc_reg_certificate_upload', maxCount: 1 },
-      { name: 'mds_affidavit_upload', maxCount: 1 }
+      { name: 'mds_affidavit_upload', maxCount: 1, optional: true }
     ]
   },
 
