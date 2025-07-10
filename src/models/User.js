@@ -43,16 +43,16 @@ const userSchema = new Schema({
   },
 
   // ------------------ Personal Information ------------------
-  f_name: { type: String, required: [true, 'First name is required'] },
-  m_name: { type: String },
-  l_name: { type: String, required: [true, 'Last name is required'] },
+  f_name: { type: String, required: [true, 'First name is required'], trim: true },
+  m_name: { type: String, trim: true},
+  l_name: { type: String, required: [true, 'Last name is required'], trim: true },
   gender: {
     type: String,
     enum: ['Male', 'Female', 'Other'],
     required: [true, 'Gender is required']
   },
-  father_name: { type: String, required: [true, 'Father\'s name is required'] },
-  mother_name: { type: String, required: [true, 'Mother\'s name is required'] },
+  father_name: { type: String, required: [true, 'Father\'s name is required'], trim: true },
+  mother_name: { type: String, required: [true, 'Mother\'s name is required'], trim: true },
   place: { type: String, required: [true, 'Place is required'] },
   dob: { type: Date, required: [true, 'Date of Birth is required'] },
   category: {
