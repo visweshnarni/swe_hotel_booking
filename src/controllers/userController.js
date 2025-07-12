@@ -77,7 +77,7 @@ export const registerUser = async (req, res) => {
     const fullName = [f_name, m_name, l_name].filter(Boolean).join('_');
     const safeName = fullName.replace(/[^a-zA-Z0-9_]/g, '').replace(/[ ]+/g, '_');
     const localFolderPath = path.join(__dirname, '..', 'uploads', safeName);
-    const cloudinaryFolder = `tdc/${safeName}`;
+    
     fs.mkdirSync(localFolderPath, { recursive: true });
 
     // ---------- Upload Files ----------
@@ -88,7 +88,6 @@ export const registerUser = async (req, res) => {
         return res.status(400).json({ error: `Only PDF files allowed. '${file.originalname}' is not a PDF.` });
       }
 
-      const baseName = file.originalname.replace(/\.[^/.]+$/, '');
       const timestamp = Date.now();
       const filename = `${timestamp}-${fieldName}.pdf`;
 
