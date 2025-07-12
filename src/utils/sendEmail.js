@@ -1,12 +1,19 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
+/**
+ * Sends an email using nodemailer with Gmail transporter.
+ * @param {Object} options - Email details.
+ * @param {string} options.email - Recipient email address.
+ * @param {string} options.subject - Subject of the email.
+ * @param {string} options.message - HTML content of the email.
+ */
 const sendEmail = async (options) => {
-  // 1. Transporter config (Use Gmail or Mailtrap or SMTP)
+  // 1. Transporter config (Gmail, SMTP, etc.)
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER, // your email
-      pass: process.env.EMAIL_PASS  // app password
+      user: process.env.EMAIL_USER, // your Gmail address
+      pass: process.env.EMAIL_PASS  // your Gmail app password
     }
   });
 
@@ -22,6 +29,4 @@ const sendEmail = async (options) => {
   await transporter.sendMail(mailOptions);
 };
 
-
-
-module.exports = sendEmail;
+export default sendEmail;

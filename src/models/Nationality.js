@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+
 const { Schema } = mongoose;
 
 const nationalitySchema = new Schema({
@@ -10,4 +11,5 @@ const nationalitySchema = new Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Nationality', nationalitySchema);
+const Nationality = mongoose.model('Nationality', nationalitySchema);
+export default Nationality;

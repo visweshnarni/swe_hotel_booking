@@ -1,12 +1,10 @@
 // utils/uploadToCloudinary.js
-const cloudinary = require('cloudinary').v2;
-const dotenv = require('dotenv');
-const streamifier = require('streamifier');
+import { v2 as cloudinary } from 'cloudinary';
+import dotenv from 'dotenv';
+import streamifier from 'streamifier';
 
-// Load env vars
 dotenv.config();
 
-// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -14,31 +12,26 @@ cloudinary.config({
 });
 
 /**
- * Uploads a buffer to Cloudinary with proper naming and .pdf extension
- * @param {Buffer} buffer - File buffer (PDF or other raw type)
- * @param {string} filename - Original filename (e.g., "pan_upload.pdf")
- * @param {string} folder - Folder path inside Cloudinary (e.g., "tdc/John_A_Doe")
- * @returns {Promise<string>} - Secure Cloudinary file URL
+ * Upload PDF buffer to Cloudinary inside tdc/fullName/
+ * @param {Buffer} buffer - PDF buffer
+ * @param {string} filename - e.g. "16893728499-pan_upload.pdf"
+ * @param {string} fullName - Folder like "John_A_Doe"
  */
-exports.uploadBufferToCloudinary = async (buffer, filename, folder) => {
+export const uploadBufferToCloudinary = async (buffer, filename, fullName) => {
   return new Promise((resolve, reject) => {
-    const timestamp = Date.now();
-    const cleanFilename = filename.replace(/\.[^/.]+$/, ''); // Remove extension
-    const publicId = `${folder}/${timestamp}-${cleanFilename}`;
-
+    const publicId = `tdc/${fullName}/${filename.replace('.pdf', '')}`;
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        resource_type: 'raw', // Required for PDFs and other non-image files
-        public_id: publicId,
-        format: 'pdf', // Ensures the .pdf extension is added to the URL
+        resource_type: 'raw',        // ensure it's treated as raw (PDF)
+        public_id: publicId,         // ensures folder structure
+        format: 'pdf'               // set correct format
       },
       (error, result) => {
         if (error) return reject(error);
-        return resolve(result.secure_url); // Includes .pdf extension
+        return resolve(result.secure_url);
       }
     );
 
     streamifier.createReadStream(buffer).pipe(uploadStream);
   });
 };
-

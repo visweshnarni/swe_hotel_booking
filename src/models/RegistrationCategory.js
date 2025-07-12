@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+
 const { Schema } = mongoose;
 
 const registrationCategoryEnum = [
@@ -25,4 +26,5 @@ const registrationCategorySchema = new Schema({
   renewal_tatkal_amount: { type: Number, required: true }
 }, { timestamps: true });
 
-module.exports = mongoose.model('RegistrationCategory', registrationCategorySchema);
+const RegistrationCategory = mongoose.model('RegistrationCategory', registrationCategorySchema);
+export default RegistrationCategory;

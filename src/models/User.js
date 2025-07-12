@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+
 const { Schema } = mongoose;
 
 // PG / MDS Specialities Enum
@@ -44,7 +45,7 @@ const userSchema = new Schema({
 
   // ------------------ Personal Information ------------------
   f_name: { type: String, required: [true, 'First name is required'], trim: true },
-  m_name: { type: String, trim: true},
+  m_name: { type: String, trim: true },
   l_name: { type: String, required: [true, 'Last name is required'], trim: true },
   gender: {
     type: String,
@@ -177,4 +178,5 @@ userSchema.pre('save', async function (next) {
   }
 });
 
-module.exports = mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
+export default User;

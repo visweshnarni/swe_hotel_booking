@@ -2,6 +2,7 @@
   "name": "backend-tdc",
   "version": "1.0.0",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "seed:categories": "node seeders/seedRegistrationCategories.js",
     "seed:nationalities": "node seeders/seedNationalities.js",
@@ -16,6 +17,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
@@ -28,3 +30,4 @@
     "streamifier": "^0.1.1"
   }
 }
+ 

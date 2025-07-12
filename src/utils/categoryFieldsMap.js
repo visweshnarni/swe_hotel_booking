@@ -135,4 +135,4 @@ const CategoryFieldsMap = {
   }
 };
 
-module.exports = CategoryFieldsMap;
+export default CategoryFieldsMap;

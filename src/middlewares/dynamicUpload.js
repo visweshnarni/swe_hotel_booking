@@ -1,7 +1,9 @@
-const multer = require('multer');
-const path = require('path');
-const RegistrationCategory = require('../models/RegistrationCategory');
-const CategoryFieldsMap = require('../utils/categoryFieldsMap');
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+import RegistrationCategory from '../models/RegistrationCategory.js';
+import CategoryFieldsMap from '../utils/categoryFieldsMap.js';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB limit
 
@@ -83,4 +85,4 @@ const dynamicUpload = async (req, res, next) => {
   });
 };
 
-module.exports = dynamicUpload;
+export default dynamicUpload;

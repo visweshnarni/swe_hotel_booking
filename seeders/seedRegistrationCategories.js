@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const RegistrationCategory = require('../src/models/RegistrationCategory');
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import RegistrationCategory from '../src/models/RegistrationCategory.js';
 
 dotenv.config();
 

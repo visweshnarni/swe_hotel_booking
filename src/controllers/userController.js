@@ -1,12 +1,18 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
+import path from 'path';
+import fs from 'fs';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import { fileURLToPath } from 'url';
 
-const RegistrationCategory = require('../models/RegistrationCategory');
-const Nationality = require('../models/Nationality');
-const User = require('../models/User');
-const sendEmail = require('../utils/sendEmail');
-const { uploadBufferToCloudinary } = require('../utils/uploadToCloudinary');
+import RegistrationCategory from '../models/RegistrationCategory.js';
+import Nationality from '../models/Nationality.js';
+import User from '../models/User.js';
+import sendEmail from '../utils/sendEmail.js';
+import { uploadBufferToCloudinary } from '../utils/uploadToCloudinary.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -15,7 +21,7 @@ const generateToken = (id) => {
 };
 
 // ================= REGISTER NEW USER =================
-exports.registerUser = async (req, res) => {
+export const registerUser = async (req, res) => {
   try {
     const {
       nationality_id,
@@ -67,20 +73,41 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ error: "Password must be at least 8 characters long." });
     }
 
-    // Upload files to Cloudinary
+    // ---------- Prepare User Name Based Folder ----------
     const fullName = [f_name, m_name, l_name].filter(Boolean).join('_');
     const safeName = fullName.replace(/[^a-zA-Z0-9_]/g, '').replace(/[ ]+/g, '_');
+    const localFolderPath = path.join(__dirname, '..', 'uploads', safeName);
     const cloudinaryFolder = `tdc/${safeName}`;
+    fs.mkdirSync(localFolderPath, { recursive: true });
 
-    for (const [key, file] of Object.entries(req.fileBufferMap)) {
-      const publicId = `${Date.now()}-${key}`;
-      const cloudUrl = await uploadBufferToCloudinary(file.buffer, publicId, cloudinaryFolder);
-      req.cleanedFormData[key] = cloudUrl;
+    // ---------- Upload Files ----------
+    for (const [fieldName, file] of Object.entries(req.fileBufferMap)) {
+      const extension = path.extname(file.originalname).toLowerCase();
+
+      if (extension !== '.pdf') {
+        return res.status(400).json({ error: `Only PDF files allowed. '${file.originalname}' is not a PDF.` });
+      }
+
+      const baseName = file.originalname.replace(/\.[^/.]+$/, '');
+      const timestamp = Date.now();
+      const filename = `${timestamp}-${fieldName}.pdf`;
+
+      // 1. Save locally
+      const localPath = path.join(localFolderPath, filename);
+      fs.writeFileSync(localPath, file.buffer);
+
+      // 2. Upload to Cloudinary
+      const cloudinaryUrl = await uploadBufferToCloudinary(file.buffer, filename, safeName);
+
+      // 3. Save Cloudinary URL to field
+      req.cleanedFormData[fieldName] = cloudinaryUrl;
     }
 
+    // ---------- Save User ----------
     const user = new User(req.cleanedFormData);
     await user.save();
 
+    // ---------- Send Email ----------
     await sendEmail({
       email: user.email,
       subject: 'Welcome to Telangana Dental Council',
@@ -105,6 +132,7 @@ exports.registerUser = async (req, res) => {
         mobile_number: user.mobile_number
       }
     });
+
   } catch (err) {
     console.error("Registration Error:", err);
     res.status(500).json({ success: false, error: err.message });
@@ -112,7 +140,7 @@ exports.registerUser = async (req, res) => {
 };
 
 // ================= LOGIN USER =================
-exports.loginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -127,9 +155,17 @@ exports.loginUser = async (req, res) => {
 
   const token = generateToken(user._id);
 
+  // Send JWT as HttpOnly Cookie
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+
   res.status(200).json({
     success: true,
-    token,
+    message: 'Login successful',
     user: {
       id: user._id,
       fullname: `${user.f_name} ${user.m_name || ''} ${user.l_name}`.trim(),
@@ -138,8 +174,19 @@ exports.loginUser = async (req, res) => {
   });
 };
 
+// ================= LOGOUT USER =================
+export const logoutUser = (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict'
+  });
+
+  res.status(200).json({ success: true, message: 'Logged out successfully' });
+};
+
 // ================= GET PROFILE =================
-exports.getProfile = async (req, res) => {
+export const getProfile = async (req, res) => {
   res.status(200).json({
     success: true,
     data: req.user
@@ -147,7 +194,7 @@ exports.getProfile = async (req, res) => {
 };
 
 // ================= FORGOT PASSWORD =================
-exports.forgotPassword = async (req, res) => {
+export const forgotPassword = async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
   if (!user) return res.status(404).json({ message: 'User not found.' });
@@ -189,7 +236,7 @@ exports.forgotPassword = async (req, res) => {
 };
 
 // ================= RESET PASSWORD =================
-exports.resetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
   const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
 
   const user = await User.findOne({
@@ -216,7 +263,7 @@ exports.resetPassword = async (req, res) => {
 };
 
 // ================= GET REGISTRATION CATEGORIES =================
-exports.getRegistrationCategories = async (req, res) => {
+export const getRegistrationCategories = async (req, res) => {
   try {
     const categories = await RegistrationCategory.find({});
     res.status(200).json(categories);
@@ -226,7 +273,7 @@ exports.getRegistrationCategories = async (req, res) => {
 };
 
 // ================= GET NATIONALITIES =================
-exports.getNationalities = async (req, res) => {
+export const getNationalities = async (req, res) => {
   try {
     const nationalities = await Nationality.find({});
     res.status(200).json(nationalities);

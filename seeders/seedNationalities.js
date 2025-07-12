@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const Nationality = require('../src/models/Nationality');
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import Nationality from '../src/models/Nationality.js';
 
 dotenv.config();
 
