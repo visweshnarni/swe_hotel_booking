@@ -26,5 +26,6 @@ const registrationCategorySchema = new Schema({
   renewal_tatkal_amount: { type: Number, required: true }
 }, { timestamps: true });
 
+
 const RegistrationCategory = mongoose.model('RegistrationCategory', registrationCategorySchema);
 export default RegistrationCategory;

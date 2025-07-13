@@ -7,6 +7,8 @@ import { fileURLToPath } from 'url';
 
 import connectDB from './src/config/db.js';
 import userRoutes from './src/routes/userRoutes.js';
+import gscRoutes from './src/routes/gscRoutes.js';
+import nocRoutes from './src/routes/nocRoutes.js';
 
 // For __dirname replacement in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -25,6 +27,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/gsc', gscRoutes);
+app.use('/api/noc', nocRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;
