@@ -1,11 +1,6 @@
 import mongoose from 'mongoose';
-
 const { Schema } = mongoose;
 
-const paymentTypeEnum = [
-  'Regular (By Post - Fee includes postal charges)',
-  'Tatkal (By Hand)'
-];
 
 const paymentSchema = new Schema({
   // Reference to the user
@@ -24,11 +19,7 @@ const paymentSchema = new Schema({
   // Payment Type (fetched from User.regtype)
   payment_type: {
     type: String,
-    enum: {
-      values: paymentTypeEnum,
-      message: 'Payment type must be either "Regular (By Post - Fee includes postal charges)" or "Tatkal (By Hand)"'
-    },
-    required: [true, 'Payment type is required']
+    required: [true, 'Payment type must be either { Regular (By Post - Fee includes postal charges) or Tatkal (By Hand) }']
   },
 
   // Amount fetched from RegistrationCategory based on type
