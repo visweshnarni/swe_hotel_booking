@@ -9,7 +9,7 @@ import connectDB from './src/config/db.js';
 import userRoutes from './src/routes/userRoutes.js';
 import gscRoutes from './src/routes/gscRoutes.js';
 import nocRoutes from './src/routes/nocRoutes.js';
-
+import paymentRoutes from './src/routes/paymentRoutes.js';
 // For __dirname replacement in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +29,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/users', userRoutes);
 app.use('/api/gsc', gscRoutes);
 app.use('/api/noc', nocRoutes);
+app.use('/api/payment', paymentRoutes);
+
+
+app.get('/', (req, res) => res.send('🎉 Telangana Dental Council API Running !!!!'));
 
 // Start server
 const PORT = process.env.PORT || 5000;
