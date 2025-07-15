@@ -32,7 +32,7 @@ app.use('/api/noc', nocRoutes);
 app.use('/api/payment', paymentRoutes);
 
 
-app.get('/', (req, res) => res.send('🎉 Telangana Dental Council API Running !!!!'));
+app.get('/', (req, res) => res.send('🎉 Telangana Dental Council API is Running..........!!!!'));
 
 // Start server
 const PORT = process.env.PORT || 5000;

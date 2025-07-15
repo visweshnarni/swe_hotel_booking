@@ -33,7 +33,7 @@ export const submitGSC = async (req, res) => {
       return res.status(400).json({ error: 'Postal address is required' });
     }
 
-    const fullName = `${req.user.f_name}_${req.user.m_name || ''}_${req.user.l_name}`.replace(/\s+/g, '_');
+    const fullName = [req.user.f_name, req.user.m_name, req.user.l_name].filter(Boolean).join('_').replace(/\s+/g, '_');
     const safeName = fullName.replace(/[^a-zA-Z0-9_]/g, '');
 
     const savedFiles = {};
