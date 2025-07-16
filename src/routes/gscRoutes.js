@@ -1,5 +1,5 @@
 import express from 'express';
-import { submitGSC } from '../controllers/gscController.js';
+import { applyGSC, getGSC } from '../controllers/gscController.js';
 import { protect } from '../middlewares/userAuth.js';
 import staticFileUpload from '../middlewares/staticFileUpload.js';
 
@@ -16,5 +16,6 @@ const gscFields = [
 ];
 const gscTextFields = ['postal_address'];
 
-router.post('/', protect, staticFileUpload(gscFields, gscTextFields), submitGSC);
+router.post('/apply-gsc', protect, staticFileUpload(gscFields, gscTextFields), applyGSC);
+router.get('/gsc', protect, getGSC);
 export default router;

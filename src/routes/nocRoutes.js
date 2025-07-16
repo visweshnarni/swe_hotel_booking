@@ -1,5 +1,5 @@
 import express from 'express';
-import { submitNOC } from '../controllers/nocController.js';
+import { applyNOC, getNOC } from '../controllers/nocController.js';
 import { protect } from '../middlewares/userAuth.js';
 import staticFileUpload from '../middlewares/staticFileUpload.js';
 
@@ -12,5 +12,11 @@ const nocFields = [
 ];
 const nocTextFields = ['postal_address', 'dental_council_name'];
 
-router.post('/', protect, staticFileUpload(nocFields, nocTextFields), submitNOC);
+router.post('/apply-noc', protect, staticFileUpload(nocFields, nocTextFields), applyNOC);
+router.get('/noc', protect, getNOC); 
+
+
 export default router;
+
+
+

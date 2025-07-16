@@ -8,7 +8,8 @@ import { uploadBufferToCloudinary } from '../utils/uploadToCloudinary.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const submitNOC = async (req, res) => {
+// ====== APPLY FOR NEW NOC ======
+export const applyNOC = async (req, res) => {
   try {
     const { dental_council_name, postal_address } = req.cleanedFormData;
     const userId = req.user._id;
@@ -53,6 +54,19 @@ export const submitNOC = async (req, res) => {
     res.status(201).json({ success: true, message: 'NOC submitted successfully', data: noc });
   } catch (error) {
     console.error('NOC Submission Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+
+// ====== GET NOC ======
+export const getNOC = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const applications = await NOC.find({ user_id: userId }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: applications });
+  } catch (error) {
+    console.error('Fetch NOC Error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };

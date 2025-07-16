@@ -27,8 +27,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/users', userRoutes);
-app.use('/api/gsc', gscRoutes);
-app.use('/api/noc', nocRoutes);
+app.use('/api/certificates', gscRoutes);
+app.use('/api/certificates', nocRoutes);
 app.use('/api/payment', paymentRoutes);
 
 

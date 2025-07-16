@@ -8,7 +8,8 @@ import { uploadBufferToCloudinary } from '../utils/uploadToCloudinary.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const submitGSC = async (req, res) => {
+// ====== APPLY FOR NEW GSC ======
+export const applyGSC = async (req, res) => {
   try {
     const { postal_address } = req.cleanedFormData;
     const userId = req.user._id;
@@ -61,6 +62,18 @@ export const submitGSC = async (req, res) => {
     res.status(201).json({ success: true, message: 'GSC submitted successfully', data: gsc });
   } catch (error) {
     console.error('GSC Submission Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ====== GET GSC ======
+export const getGSC = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const applications = await GSC.find({ user_id: userId }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: applications });
+  } catch (error) {
+    console.error('Fetch GSC Error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
