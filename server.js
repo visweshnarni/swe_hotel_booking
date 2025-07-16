@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import connectDB from './src/config/db.js';
+import authRoutes from './src/routes/authRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
 import gscRoutes from './src/routes/gscRoutes.js';
 import nocRoutes from './src/routes/nocRoutes.js';
@@ -26,6 +27,8 @@ app.use(cookieParser());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
+app.use('/api/auth', authRoutes);
+
 app.use('/api/users', userRoutes);
 app.use('/api/certificates', gscRoutes);
 app.use('/api/certificates', nocRoutes);
