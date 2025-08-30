@@ -13,7 +13,7 @@ services:
     startCommand: node app.js 
     # The port your application listens on
     # Must match the port in your app.js or server.js
-    port: 5000 
+    # port: 5000 
     
     # Environment variables for your application
     envVars:
