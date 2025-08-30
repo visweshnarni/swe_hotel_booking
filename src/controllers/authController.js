@@ -9,34 +9,34 @@ const generateToken = (id) => {
 };
 
 // Verify captcha with Google
-const verifyCaptcha = async (captcha) => {
-  if (!captcha) return false;
+// const verifyCaptcha = async (captcha) => {
+//   if (!captcha) return false;
 
-  try {
-    const verifyURL = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${captcha}`;
-    const { data } = await axios.post(verifyURL);
-    return data.success;
-  } catch (err) {
-    console.error("Captcha verification error:", err.message);
-    return false;
-  }
-};
+//   try {
+//     const verifyURL = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${captcha}`;
+//     const { data } = await axios.post(verifyURL);
+//     return data.success;
+//   } catch (err) {
+//     console.error("Captcha verification error:", err.message);
+//     return false;
+//   }
+// };
 
 // ---------------- Signup ----------------
 export const signupBasic = async (req, res) => {
   try {
-    const { full_name, email, mobile_number, password, confirm_password, captcha } = req.body;
+    const { full_name, email, mobile_number, password, confirm_password} = req.body;
 
     // 1. Check fields
-    if (!full_name || !email || !mobile_number || !password || !confirm_password || !captcha) {
+    if (!full_name || !email || !mobile_number || !password || !confirm_password ) {
       return res.status(400).json({ error: 'All fields including captcha are required.' });
     }
 
     // 2. Verify captcha
-    const isCaptchaValid = await verifyCaptcha(captcha);
-    if (!isCaptchaValid) {
-      return res.status(400).json({ error: 'Captcha verification failed.' });
-    }
+//     const isCaptchaValid = await verifyCaptcha(captcha);
+//     if (!isCaptchaValid) {
+//       return res.status(400).json({ error: 'Captcha verification failed.' });
+//     }
 
     // 3. Password match
     if (password !== confirm_password) {
@@ -76,26 +76,26 @@ export const signupBasic = async (req, res) => {
 // ---------------- Login ----------------
 export const loginBasic = async (req, res) => {
   try {
-    const { email, password, captcha } = req.body;
+    const { email, password } = req.body;
 
     // 1. Validate fields
-    if (!email || !password || !captcha) {
+    if (!email || !password ) {
       return res.status(400).json({ error: 'Email, password, and captcha are required.' });
     }
 
     // 2. Verify captcha
-    const isCaptchaValid = await verifyCaptcha(captcha);
-    if (!isCaptchaValid) {
-      return res.status(400).json({ error: 'Captcha verification failed.' });
-    }
+//     const isCaptchaValid = await verifyCaptcha(captcha);
+//     if (!isCaptchaValid) {
+//       return res.status(400).json({ error: 'Captcha verification failed.' });
+//     }
 
     // 3. Find user
     const user = await BasicUser.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid email or password.' });
 
     // 4. Compare password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: 'Invalid email or password.' });
+//     const isMatch = await bcrypt.compare(password, user.password);
+    if (password!==user.password) return res.status(400).json({ error: 'Invalid email or password.' });
 
     // 5. Generate token
     const token = generateToken(user._id);
