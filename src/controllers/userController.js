@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import RegistrationCategory from '../models/RegistrationCategory.js';
 import Nationality from '../models/Nationality.js';
 import User from '../models/User.js';
+import BasicUser from '../models/BasicUser.js'; // Import BasicUser model
 import sendEmail from '../utils/sendEmail.js';
 import { uploadBufferToCloudinary } from '../utils/uploadToCloudinary.js';
 
@@ -20,120 +21,78 @@ const generateToken = (id) => {
   });
 };
 
-// ================= REGISTER NEW USER =================
+// ================= REGISTER AND TRANSFER USER PROFILE =================
 export const registerUser = async (req, res) => {
   try {
+    const basicUser = req.user;
+
+    if (!basicUser) {
+      return res.status(401).json({ error: "Authentication failed. User not found." });
+    }
+    
+    // Destructure and validate all required fields
     const {
-      nationality_id,
-      regcategory_id,
-      email,
-      mobile_number,
-      password,
-      f_name,
-      m_name,
-      l_name,
-      father_name,
-      mother_name,
-      place,
-      dob,
-      category,
-      address,
-      pan_number,
-      aadhaar_number,
-      regtype
+        nationality_id, regcategory_id, email, mobile_number, f_name, l_name,
+        father_name, mother_name, place, dob, category, address, pan_number,
+        aadhaar_number, regtype
     } = req.cleanedFormData;
 
-    if (!f_name || !l_name || !father_name || !mother_name ||
-      !place || !dob || !category || !address ||
-      !pan_number || !aadhaar_number || !regtype) {
-      return res.status(400).json({ error: "Missing required personal information fields." });
+    if (!f_name || !l_name || !father_name || !mother_name || !place || !dob || !category || !address ||
+        !pan_number || !aadhaar_number || !regtype || !email || !mobile_number || !nationality_id || !regcategory_id) {
+        return res.status(400).json({ error: "Missing required personal information fields." });
     }
 
-    const mmYYYYRegex = /^(0[1-9]|1[0-2])\/\d{4}$/;
-    if (req.cleanedFormData.bds_qualification_year && !mmYYYYRegex.test(req.cleanedFormData.bds_qualification_year)) {
-      return res.status(400).json({ error: "bds_qualification_year must be in MM/YYYY format" });
-    }
-    if (req.cleanedFormData.mds_qualification_year && !mmYYYYRegex.test(req.cleanedFormData.mds_qualification_year)) {
-      return res.status(400).json({ error: "mds_qualification_year must be in MM/YYYY format" });
+    const existingFullUser = await User.findOne({ email: basicUser.email });
+    if (existingFullUser) {
+        return res.status(409).json({ error: "A full profile already exists for this user." });
     }
 
-    const regCategory = await RegistrationCategory.findById(regcategory_id);
-    if (!regCategory) return res.status(400).json({ error: "Invalid regcategory_id" });
-
-    const nationality = await Nationality.findById(nationality_id);
-    if (!nationality) return res.status(400).json({ error: "Invalid nationality_id" });
-
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) return res.status(409).json({ error: "Email already exists" });
-
-    const existingMobile = await User.findOne({ mobile_number });
-    if (existingMobile) return res.status(409).json({ error: "Mobile number already exists" });
-
-    if (password.length < 8) {
-      return res.status(400).json({ error: "Password must be at least 8 characters long." });
-    }
-
-    // ---------- Prepare User Name Based Folder ----------
-    const fullName = [f_name, m_name, l_name].filter(Boolean).join('_');
-    const safeName = fullName.replace(/[^a-zA-Z0-9_]/g, '').replace(/[ ]+/g, '_');
-    const localFolderPath = path.join(__dirname, '..', 'uploads', safeName);
-    
-    fs.mkdirSync(localFolderPath, { recursive: true });
-
-    // ---------- Upload Files ----------
+    const uploadedFileUrls = {};
     for (const [fieldName, file] of Object.entries(req.fileBufferMap)) {
-      const extension = path.extname(file.originalname).toLowerCase();
-
-      if (extension !== '.pdf') {
-        return res.status(400).json({ error: `Only PDF files allowed. '${file.originalname}' is not a PDF.` });
-      }
-
-      const timestamp = Date.now();
-      const filename = `${timestamp}-${fieldName}.pdf`;
-
-      // 1. Save locally
-      const localPath = path.join(localFolderPath, filename);
-      fs.writeFileSync(localPath, file.buffer);
-
-      // 2. Upload to Cloudinary
-      const cloudinaryUrl = await uploadBufferToCloudinary(file.buffer, filename, safeName);
-
-      // 3. Save Cloudinary URL to field
-      req.cleanedFormData[fieldName] = cloudinaryUrl;
+        if (path.extname(file.originalname).toLowerCase() !== '.pdf') {
+            return res.status(400).json({ error: `Only PDF files allowed. '${file.originalname}' is not a PDF.` });
+        }
+        const fullName = [f_name, l_name].filter(Boolean).join('_');
+        const safeName = fullName.replace(/[^a-zA-Z0-9_]/g, '').replace(/[ ]+/g, '_');
+        const cloudinaryUrl = await uploadBufferToCloudinary(file.buffer, safeName, fieldName);
+        uploadedFileUrls[fieldName] = cloudinaryUrl;
     }
 
-    // ---------- Save User ----------
-    const user = new User(req.cleanedFormData);
-    await user.save();
-
-    // ---------- Send Email ----------
-    await sendEmail({
-      email: user.email,
-      subject: 'Welcome to Telangana Dental Council',
-      message: `
-        <h3>Hello ${user.f_name},</h3>
-        <p>Thank you for registering with the Telangana Dental Council Portal.</p>
-      `
+    // Create a NEW User document by combining BasicUser and form data
+    const newUser = new User({
+        ...basicUser.toObject(),
+        ...req.cleanedFormData,
+        ...uploadedFileUrls,
+        regtype: regtype.trim()
     });
+    
+    delete newUser._id;
 
-    const token = generateToken(user._id);
+    // Await the save operation to confirm it was successful
+    const savedUser = await newUser.save();
+    
+    if (!savedUser) {
+      throw new Error("User document could not be saved to the database.");
+    }
 
+    // Delete the old BasicUser document to prevent duplicates
+    await BasicUser.findByIdAndDelete(basicUser._id);
+
+    const token = generateToken(newUser._id);
     res.status(201).json({
       success: true,
-      message: "User registered successfully.",
+      message: "User registered and profile created successfully.",
       token,
       data: {
-        id: user._id,
-        f_name: user.f_name,
-        m_name: user.m_name,
-        l_name: user.l_name,
-        email: user.email,
-        mobile_number: user.mobile_number
+        id: newUser._id,
+        f_name: newUser.f_name,
+        l_name: newUser.l_name,
+        email: newUser.email,
       }
     });
 
   } catch (err) {
-    console.error("Registration Error:", err);
+    console.error("Registration and Transfer Error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
@@ -146,20 +105,43 @@ export const loginUser = async (req, res) => {
     return res.status(400).json({ message: 'Email and password are required.' });
   }
 
+  // Look for the user in the new User model
   const user = await User.findOne({ email });
-  if (!user) return res.status(400).json({ message: 'Invalid email or password.' });
+  if (!user) {
+      // If not in the User model, check the BasicUser model
+      const basicUser = await BasicUser.findOne({ email });
+      if (!basicUser) {
+          return res.status(400).json({ message: 'Invalid email or password.' });
+      }
+      
+      // If they are a BasicUser, check password and return a token for the BasicUser
+      const isMatch = await bcrypt.compare(password, basicUser.password);
+      if (!isMatch) return res.status(400).json({ message: 'Invalid email or password.' });
+
+      const token = generateToken(basicUser._id);
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+      return res.status(200).json({
+          success: true,
+          message: 'Login successful',
+          user: { id: basicUser._id, fullname: basicUser.full_name, email: basicUser.email }
+      });
+  }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) return res.status(400).json({ message: 'Invalid email or password.' });
 
   const token = generateToken(user._id);
 
-  // Send JWT as HttpOnly Cookie
   res.cookie('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'Strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000
   });
 
   res.status(200).json({
@@ -200,7 +182,7 @@ export const forgotPassword = async (req, res) => {
 
   const resetToken = crypto.randomBytes(20).toString('hex');
   user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 mins
+  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
 
   await user.save({ validateBeforeSave: false });
 

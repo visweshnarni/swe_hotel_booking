@@ -18,18 +18,31 @@ import { protect } from '../middlewares/userAuth.js';
 
 const router = express.Router();
 
-// Auth routes
-router.post('/register', dynamicUpload, registerUser);          // Register user with file uploads
-router.post('/login', loginUser);                               // Login user
-router.get('/logout', logoutUser);                              // Logout user
-router.post('/forgot-password', forgotPassword);                // Send reset password email
-router.post('/reset-password/:token', resetPassword);           // Reset password
+// Public routes that don't require authentication
+router.post('/login', loginUser);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password/:token', resetPassword);
+router.get('/logout', logoutUser);
+router.get('/categories', getRegistrationCategories);
+router.get('/nationalities', getNationalities);
 
-// Protected routes
-router.get('/profile', protect, getProfile);                    // Get user profile (requires auth)
 
-// Public utility routes
-router.get('/categories', getRegistrationCategories);           // Get registration categories
-router.get('/nationalities', getNationalities);                 // Get nationalities
+// === PROTECTED ROUTES ===
+// These routes can only be accessed by a logged-in user.
+// The `protect` middleware is the first handler to ensure authentication.
+
+router.post(
+  '/register', 
+  protect, 
+  dynamicUpload, 
+  registerUser
+);
+// The order is crucial:
+// 1. `protect`: Verifies the user's login status and attaches `req.user`.
+// 2. `dynamicUpload`: Processes the form data and files.
+// 3. `registerUser`: Updates the user profile using the data from the previous two middlewares.
+
+router.get('/profile', protect, getProfile); 
+
 
 export default router;
