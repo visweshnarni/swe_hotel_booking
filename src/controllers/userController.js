@@ -76,7 +76,7 @@ export const registerUser = async (req, res) => {
     }
 
     // Delete the old BasicUser document to prevent duplicates
-    await BasicUser.findByIdAndDelete(basicUser._id);
+    // await BasicUser.findByIdAndDelete(basicUser._id);
 
     const token = generateToken(newUser._id);
     res.status(201).json({
