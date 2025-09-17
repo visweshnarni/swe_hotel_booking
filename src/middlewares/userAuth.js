@@ -18,20 +18,22 @@ export const protect = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const userId = decoded.id;
 
-        // CRITICAL FIX: Fetch the BasicUser document WITH the password
-        const basicUser = await BasicUser.findById(userId);
+        // CRITICAL FIX: Try to find the user in the main `User` collection first
+        const fullUser = await User.findById(userId).select('-password');
+        if (fullUser) {
+            req.user = fullUser;
+            return next();
+        }
         
-        if (!basicUser) {
-            const fullUser = await User.findById(userId).select('-password');
-            if (fullUser) {
-                req.user = fullUser;
-                return next();
-            }
-            return res.status(404).json({ success: false, error: 'User not found in BasicUser or User model' });
+        // If not a full user, check if they are a basic user who has not applied yet
+        const basicUser = await BasicUser.findById(userId).select('-password');
+        if (basicUser) {
+            req.user = basicUser;
+            return next();
         }
 
-        req.user = basicUser;
-        next();
+        // If not found in either collection, the user does not exist
+        return res.status(404).json({ success: false, error: 'User not found' });
     } catch (err) {
         console.error('Auth error:', err.message);
         res.status(401).json({ success: false, error: 'Token is invalid or expired' });

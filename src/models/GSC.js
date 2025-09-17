@@ -6,6 +6,24 @@ const gscSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    
+    applicationNo: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    
+    name: {
+        type: String,
+        required: true
+    },
+    
+    status: {
+        type: String,
+        enum: ['Pending', 'Approved', 'Rejected'],
+        default: 'Pending',
+        required: true
+    },
 
     tdc_reg_certificate_upload: {
         type: String,
@@ -42,9 +60,17 @@ const gscSchema = new mongoose.Schema({
         required: [true, 'Postal address is required']
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+
+gscSchema.virtual('applicationDate').get(function() {
+    if (this.updatedAt && this.updatedAt > this.createdAt) {
+        return this.updatedAt;
+    }
+    return this.createdAt;
 });
 
 const GSC = mongoose.model('GSC', gscSchema);
 export default GSC;
-

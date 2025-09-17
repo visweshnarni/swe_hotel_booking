@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-// No bcrypt import for now
+import bcrypt from 'bcryptjs';
 
 const { Schema } = mongoose;
 
@@ -82,7 +82,17 @@ const userSchema = new Schema({
     dci_clg_address: String,
     dci_degree_upload: String,
     dci_bonafide_upload: String
-}, { timestamps: true });
+}, {
+    timestamps: true,
+    // CRITICAL: This option ensures virtual fields are returned in JSON
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+});
+
+// Create a virtual property `full_name` that combines `f_name`, `m_name`, and `l_name`
+userSchema.virtual('full_name').get(function() {
+    return `${this.f_name} ${this.m_name || ''} ${this.l_name}`.trim();
+});
 
 // Password Hashing (commented out for testing)
 // userSchema.pre('save', async function (next) {
