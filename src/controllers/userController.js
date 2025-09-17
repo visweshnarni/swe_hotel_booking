@@ -167,12 +167,44 @@ export const logoutUser = (req, res) => {
 };
 
 // ================= GET PROFILE =================
+// export const getProfile = async (req, res) => {
+//   res.status(200).json({
+//     success: true,
+//     data: req.user
+//   });
+// };
+// ================= GET PROFILE =================
 export const getProfile = async (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: req.user
-  });
+  try {
+    // req.user._id should be set by your 'protect' middleware
+    const user = await User.findById(req.user._id)
+      .populate('regcategory_id', 'name')
+      .populate('nationality_id', 'name')
+      .lean();
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Flatten populated fields for frontend
+    const responseProfile = {
+      ...user,
+      regcategory_name: user.regcategory_id?.name || '',
+      nationality_name: user.nationality_id?.name || '',
+      // To avoid exposing password/hash:
+      password: undefined,
+      resetPasswordToken: undefined,
+      resetPasswordExpire: undefined,
+      __v: undefined,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: responseProfile,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
+
 
 // ================= FORGOT PASSWORD =================
 export const forgotPassword = async (req, res) => {
