@@ -66,6 +66,22 @@ const HotelSchema = new mongoose.Schema({
   type: String,
   maxlength: 500 // or whatever maximum length you want
 }],
+  checkin_start_date: {
+    type: Date,
+    required: true
+  },
+  checkin_end_date: {
+    type: Date,
+    required: true
+  },
+  checkout_start_date: {
+    type: Date,
+    required: true
+  },
+  checkout_end_date: {
+    type: Date,
+    required: true
+  },
 
   room_types: [RoomTypeSchema],
   policies: [{
