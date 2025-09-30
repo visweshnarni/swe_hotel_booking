@@ -6,12 +6,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import connectDB from './src/config/db.js';
-import authRoutes from './src/routes/authRoutes.js';
-import userRoutes from './src/routes/userRoutes.js';
-import gscRoutes from './src/routes/gscRoutes.js';
-import nocRoutes from './src/routes/nocRoutes.js';
-import paymentRoutes from './src/routes/paymentRoutes.js';
-// For __dirname replacement in ESM
+
+import hotelRoutes from './src/routes/hotelRoutes.js';
+import bookingRoutes from './src/routes/bookingRoutes.js'; // NEW
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -26,27 +24,20 @@ app.use(cookieParser());
 // Static folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
-app.use('/api/auth', authRoutes);
+// Hotel API Routes
+app.use('/api/hotel', hotelRoutes);
 
-app.use('/api/users', userRoutes);
-app.use('/api/certificates', gscRoutes);
-app.use('/api/certificates', nocRoutes);
-app.use('/api/payment', paymentRoutes);
+// Booking API Routes
+app.use('/api/booking', bookingRoutes); // NEW
 
+app.get('/', (req, res) => res.send('🎉 SWE Hotel Booking API is Running..........!!!!'));
 
-app.get('/', (req, res) => res.send('🎉 Telangana Dental Council API is Running..........!!!!'));
-
-// Start server
 const PORT = process.env.PORT || 5000;
 
-
 const startServer = async () => {
-  await connectDB(); // Ensure DB is connected before starting server
-
+  await connectDB();
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
-    
   });
 };
 
