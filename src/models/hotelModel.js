@@ -33,10 +33,7 @@ const RoomTypeSchema = new mongoose.Schema({
 }, { _id: false });
 
 const HotelSchema = new mongoose.Schema({
-  hotel_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: () => new mongoose.Types.ObjectId()
-  },
+  
   hotel_name: {
     type: String,
     required: true,
