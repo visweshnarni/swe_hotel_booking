@@ -258,7 +258,7 @@ export const handleCallback = async (req, res) => {
         console.log("Booking............", booking);
         
         // 5. Redirect user back to the client-side application (Frontend)
-        const redirectUrl = booking.payment_status === 'Credit' 
+        const redirectUrl = payment_status === 'Credit' 
             ? `${FRONTEND_BASE_URL}/booking-success?id=${booking._id}`
             : `${FRONTEND_BASE_URL}/booking-failure?id=${booking._id}`;
 
