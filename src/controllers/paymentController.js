@@ -210,6 +210,7 @@ export const handleCallback = async (req, res) => {
                 );
 
                 const result = verificationResponse.data;
+                console.log("Result from payment...", result);
 
                 if (result.success && result.payment) {
                     const verifiedPayment = result.payment;
@@ -254,9 +255,10 @@ export const handleCallback = async (req, res) => {
         }
 
         await booking.save();
+        console.log("Booking............", booking);
         
         // 5. Redirect user back to the client-side application (Frontend)
-        const redirectUrl = booking.payment_status === 'success' 
+        const redirectUrl = booking.payment_status === 'Credit' 
             ? `${FRONTEND_BASE_URL}/booking-success?id=${booking._id}`
             : `${FRONTEND_BASE_URL}/booking-failure?id=${booking._id}`;
 
