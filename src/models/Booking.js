@@ -51,11 +51,10 @@ const BookingSchema = new mongoose.Schema({
     required: true
   },
   company_name: {
-  type: String,
-  required: true,
-  maxlength: 100
-},
-
+    type: String,
+    required: true,
+    maxlength: 100
+  },
   gst_number: String,
   address: {
     type: String,
@@ -78,11 +77,23 @@ const BookingSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  // --- NEW/UPDATED PAYMENT FIELDS ---
+  instamojo_request_id: {
+    type: String,
+    unique: true,
+    sparse: true // Allows multiple documents to have null/undefined here
+  },
+  instamojo_payment_id: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
   payment_status: {
     type: String,
-    enum: ['pending', 'success', 'cancelled'],
+    enum: ['pending', 'success', 'failed', 'cancelled'],
     default: 'pending'
   }
+  // --- END PAYMENT FIELDS ---
 }, { timestamps: true });
 
 export default mongoose.model('Booking', BookingSchema);

@@ -9,6 +9,7 @@ import connectDB from './src/config/db.js';
 
 import hotelRoutes from './src/routes/hotelRoutes.js';
 import bookingRoutes from './src/routes/bookingRoutes.js'; // NEW
+import paymentRoutes from './src/routes/paymentRoutes.js'; // NEW
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,6 +27,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Hotel API Routes
 app.use('/api/hotel', hotelRoutes);
+// NEW Payment API Routes
+app.use('/api/payment', paymentRoutes);
 
 // Booking API Routes
 app.use('/api/booking', bookingRoutes); // NEW
