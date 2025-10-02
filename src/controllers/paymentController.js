@@ -177,46 +177,93 @@ export const initiatePayment = async (req, res) => {
 
 
 // --- EXISTING: Handle Callback (no changes needed here) ---
+
+
+// --- ENHANCED: Handle Callback with Server-to-Server Verification ---
 export const handleCallback = async (req, res) => {
-  const { booking_id } = req.query; // Our custom query param
-  const { payment_request_id, payment_id, payment_status } = req.query; // Instamojo params
-  
-  // Log the incoming query for debugging
-  console.log('Instamojo Callback Received:', req.query);
+    // 1. Extract parameters from the callback URL query
+    const { booking_id } = req.query; // Our custom query param
+    const { payment_request_id, payment_id, payment_status } = req.query; // Instamojo params
 
-  try {
-    const booking = await Booking.findById(booking_id);
+    // Log the incoming query for debugging
+    console.log('Instamojo Callback Received:', req.query);
 
-    if (!booking) {
-      console.error(`Callback Error: Booking ID ${booking_id} not found.`);
-      return res.redirect(`${FRONTEND_BASE_URL}/booking-error?message=BookingNotFound`);
+    try {
+        const booking = await Booking.findById(booking_id);
+
+        if (!booking) {
+            console.error(`Callback Error: Booking ID ${booking_id} not found.`);
+            return res.redirect(`${FRONTEND_BASE_URL}/booking-error?message=BookingNotFound`);
+        }
+        
+        // 2. IMPORTANT: Server-to-Server Verification with Instamojo API
+        if (payment_id) { // Only proceed with API verification if a payment_id is present
+            try {
+                const verificationResponse = await axios.get(
+                    `${INSTAMOJO_URL}payments/${payment_id}/`, // Note the '/payments' endpoint for fetching details
+                    {
+                        headers: {
+                            'X-Api-Key': API_KEY,
+                            'X-Auth-Token': AUTH_TOKEN,
+                        }
+                    }
+                );
+
+                const result = verificationResponse.data;
+
+                if (result.success && result.payment) {
+                    const verifiedPayment = result.payment;
+                    let finalStatus = 'failed';
+
+                    // 3. Process the VERIFIED status from the API
+                    if (verifiedPayment.status === 'Credit' && verifiedPayment.payment_request === payment_request_id) {
+                        finalStatus = 'success';
+                        booking.instamojo_payment_id = payment_id;
+                        // You can also verify the 'amount' here for added security
+                        // if (verifiedPayment.amount !== booking.total_amount.toFixed(2)) { /* log error */ } 
+                    } else {
+                        console.warn(`Payment ID ${payment_id} status from API: ${verifiedPayment.status}. Booking will be marked as failed.`);
+                    }
+
+                    booking.payment_status = finalStatus;
+
+                    // 4. Trigger Email (Optional, but good practice here)
+                    if (finalStatus === 'success') {
+                        // Consider making a dedicated service for email to keep controller clean
+                        console.log(`Payment confirmed for ${booking._id}. Sending confirmation email...`);
+                        // In a real app, you'd fetch the recipient's details from the booking/user record
+                        /*
+                        await axios.post(`${BACKEND_BASE_URL}/api/email/send-confirmation`, { 
+                           // ... email data ...
+                        });
+                        */
+                    }
+                } else {
+                    // API verification failed (e.g., payment not found, general API error)
+                    console.error('Instamojo API verification failed:', result.message || 'Unknown error');
+                    booking.payment_status = 'failed';
+                }
+            } catch (apiError) {
+                console.error('Instamojo API request failed:', apiError.response ? apiError.response.data : apiError.message);
+                booking.payment_status = 'failed'; // Mark as failed on API communication error
+            }
+        } else {
+            // Case where Instamojo redirects without a payment_id (e.g., user abandoned payment)
+            booking.payment_status = 'failed'; 
+            console.log('No payment_id in callback. Marking as failed.');
+        }
+
+        await booking.save();
+        
+        // 5. Redirect user back to the client-side application (Frontend)
+        const redirectUrl = booking.payment_status === 'success' 
+            ? `${FRONTEND_BASE_URL}/booking-success?id=${booking._id}`
+            : `${FRONTEND_BASE_URL}/booking-failure?id=${booking._id}`;
+
+        res.redirect(redirectUrl);
+
+    } catch (error) {
+        console.error('Fatal error during Instamojo callback processing:', error);
+        res.redirect(`${FRONTEND_BASE_URL}/booking-error?message=InternalError`);
     }
-
-    if (booking.instamojo_request_id !== payment_request_id) {
-        console.warn(`Callback Warning: Instamojo Request ID mismatch for booking ${booking_id}. Expected: ${booking.instamojo_request_id}, Received: ${payment_request_id}`);
-    }
-    
-    // Check Instamojo status
-    if (payment_status === 'Credit') {
-      booking.payment_status = 'success';
-      booking.instamojo_payment_id = payment_id;
-    } else if (payment_status === 'Failed') {
-      booking.payment_status = 'failed';
-    } else {
-      booking.payment_status = 'failed'; 
-    }
-
-    await booking.save();
-    
-    // Redirect user back to the client-side application (e.g., Next.js app)
-    const redirectUrl = booking.payment_status === 'success' 
-      ? `${FRONTEND_BASE_URL}/booking-success?id=${booking._id}`
-      : `${FRONTEND_BASE_URL}/booking-failure?id=${booking._id}`;
-
-    res.redirect(redirectUrl);
-
-  } catch (error) {
-    console.error('Fatal error during Instamojo callback processing:', error);
-    res.redirect(`${FRONTEND_BASE_URL}/booking-error?message=InternalError`);
-  }
 };
