@@ -9,6 +9,6 @@ const router = express.Router();
 router.post('/initiate', initiatePayment);
 
 // GET /api/payment/callback - Instamojo redirects here after payment attempt
-router.get('/callback', handleCallback);
+router.get('/api/payment/callback', handleCallback);
 
 export default router;
