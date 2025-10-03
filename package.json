@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "main": "server.js",
   "type": "module",
-  "scripts": {
-    "seed:hotels": "node seeders/seedHotels.js",
-    "seed:all": "node seeders/seedHotels.js",
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
+ "scripts": {
+  "seed:hotels": "node seeders/seedHotels.js",
+  "seed:all": "node seeders/seedHotels.js",
+  "start": "npm run seed:all && node server.js",
+  "dev": "nodemon server.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
