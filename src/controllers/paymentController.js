@@ -218,7 +218,8 @@ export const handleCallback = async (req, res) => {
   }
 
   try {
-    const booking = await Booking.findById(booking_id);
+     //  FIXED: Populate hotel to access hotel_name
+    const booking = await Booking.findById(booking_id).populate('hotel');
 
     if (!booking) {
       console.error(`Callback Error: Booking ID ${booking_id} not found.`);
