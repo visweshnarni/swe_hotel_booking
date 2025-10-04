@@ -110,16 +110,38 @@ export const initiatePayment = async (req, res) => {
     if (!hotelDoc) {
       return res.status(404).json({ message: 'Hotel not found' });
     }
+    // ... inside initiatePayment function
+
+// ... (Existing code before duration calculation)
+
     const selectedRoom = hotelDoc.room_types.find(rt => rt.name === room_type);
     if (!selectedRoom) {
       return res.status(400).json({ message: 'Invalid room type selected' });
     }
 
-    const checkIn = new Date(check_in_date);
+    // --- MODIFICATION START ---
+    // The dates are now strings like: "Wed Oct 01 2025 00:00:00 GMT+0530 (India Standard Time)"
+    
+    // 1. Create Date objects from the stored/received strings.
+    // The JavaScript Date constructor will correctly interpret the GMT offset.
+    const checkIn = new Date(check_in_date); 
     const checkOut = new Date(check_out_date);
+    
+    // 2. Calculate the difference in time (milliseconds)
     const timeDiff = Math.abs(checkOut.getTime() - checkIn.getTime());
+
+    // 3. Calculate difference in days. 
+    // This calculation is SAFE here because timeDiff already accounts for the time zone 
+    // (e.g., if both dates start at 00:00:00 GMT+0530, the difference will be an exact multiple of 24 hours).
     const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    // NOTE: This duration calculation assumes both dates start at the same time (00:00:00).
+    // If the time components were different, the total_amount would be slightly inaccurate.
+    // --- MODIFICATION END ---
+    
     const finalAmount = selectedRoom.price * diffDays;
+
+    
 
     const newBooking = new Booking({
       ...bookingData,

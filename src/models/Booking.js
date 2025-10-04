@@ -62,11 +62,11 @@ const BookingSchema = new mongoose.Schema({
     maxlength: 255
   },
   check_in_date: {
-    type: Date,
+    type: String, // <-- CHANGED
     required: true
   },
   check_out_date: {
-    type: Date,
+    type: String, // <-- CHANGED
     required: true
   },
   room_type: {
