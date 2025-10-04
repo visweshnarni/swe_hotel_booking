@@ -42,14 +42,21 @@ export const retryPayment = async (req, res) => {
 
 
     // 3. Prepare Instamojo Payload using saved booking data
-    const payload = {
-      purpose: `Hotel Booking ID: ${bookingToRetry.booking_id} (Retry)`,
-      amount: bookingToRetry.total_amount.toFixed(2),
-      buyer_name: `${bookingToRetry.first_name} ${bookingToRetry.last_name || ''}`,
-      email: bookingToRetry.email,
-      // Use the booking's own ID in the redirect URL
-      redirect_url: `${BACKEND_BASE_URL}/api/payment/callback?booking_id=${bookingToRetry._id}`
-    };
+    // Fetch hotel name through booking's hotel reference
+const hotelDoc = await Hotel.findById(bookingToRetry.hotel);
+
+if (!hotelDoc) {
+  return res.status(404).json({ message: 'Associated hotel not found.' });
+}
+
+const payload = {
+  purpose: `SWE Pune: ${hotelDoc.hotel_name} (Retry)`,
+  amount: bookingToRetry.total_amount.toFixed(2),
+  buyer_name: `${bookingToRetry.first_name} ${bookingToRetry.last_name || ''}`,
+  email: bookingToRetry.email,
+  redirect_url: `${BACKEND_BASE_URL}/api/payment/callback?booking_id=${bookingToRetry._id}`
+};
+
 
     // 4. Call Instamojo API to create a NEW payment request
     const response = await axios.post(INSTAMOJO_URL, payload, {
@@ -150,13 +157,14 @@ export const initiatePayment = async (req, res) => {
     });
     savedBooking = await newBooking.save();
     console.log("Booking being sent..............", savedBooking);
-    const payload = {
-      purpose: `Hotel Booking ID: ${savedBooking.booking_id}`,
-      amount: finalAmount.toFixed(2),
-      buyer_name: `${first_name} ${bookingData.last_name || ''}`,
-      email: email,
-      redirect_url: `${BACKEND_BASE_URL}/api/payment/callback?booking_id=${savedBooking._id}`
-    };
+   const payload = {
+  purpose: `SWE Pune: ${hotelDoc.hotel_name}`,  // use hotel name here
+  amount: finalAmount.toFixed(2),
+  buyer_name: `${first_name} ${bookingData.last_name || ''}`,
+  email: email,
+  redirect_url: `${BACKEND_BASE_URL}/api/payment/callback?booking_id=${savedBooking._id}`
+};
+
 
     const response = await axios.post(INSTAMOJO_URL, payload, {
       headers: {
