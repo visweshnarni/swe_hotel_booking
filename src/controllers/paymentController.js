@@ -184,7 +184,7 @@ export const initiatePayment = async (req, res) => {
 
       res.status(200).json({
         message: 'Payment initiated. Redirect to payment_url.',
-        bookingId: savedBooking._id,
+        bookingId: savedBooking,
         payment_url: payment_request.longurl
       });
 
