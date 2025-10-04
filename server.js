@@ -15,7 +15,23 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+
+const allowedOrigins = [
+  'https://accommodation.synergymeetings.in',
+  'http://localhost:3000' // keep this for local dev
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // if you send cookies/auth headers
+}));
+
 app.use(express.json());
 app.use(cookieParser());
 
