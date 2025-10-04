@@ -101,7 +101,7 @@ export const initiatePayment = async (req, res) => {
   if (!hotel || !room_type || !first_name || !email || !mobile) {
     return res.status(400).json({ message: 'Missing required booking information.' });
   }
-
+  console.log("Booking data.........", bookingData);
   let savedBooking;
   try {
     const hotelDoc = await Hotel.findById(hotel);
@@ -125,7 +125,7 @@ export const initiatePayment = async (req, res) => {
       payment_status: 'pending'
     });
     savedBooking = await newBooking.save();
-
+    console.log("Booking being sebnd..............", savedBooking);
     const payload = {
       purpose: `Hotel Booking ID: ${savedBooking.booking_id}`,
       amount: finalAmount.toFixed(2),
