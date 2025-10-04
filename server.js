@@ -15,7 +15,6 @@ dotenv.config();
 
 const app = express();
 
-import cors from 'cors';
 
 const allowedOrigins = [
   'https://accommodation.synergymeetings.in',
