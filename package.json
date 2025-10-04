@@ -6,7 +6,7 @@
  "scripts": {
   "seed:hotels": "node seeders/seedHotels.js",
   "seed:all": "node seeders/seedHotels.js",
-  "start": "npm run seed:all && node server.js",
+  "start": "node server.js",
   "dev": "nodemon server.js"
 },
   "keywords": [],
