@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid'; // For generating unique booking IDs
 const BookingSchema = new mongoose.Schema({
   booking_id: {
     type: String,
-    default: () => uuidv4(),
+    default: () => uuidv4().replace(/-/g, '').substring(0, 10).toUpperCase(),
     unique: true
   },
   hotel: {
