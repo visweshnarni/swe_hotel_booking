@@ -152,6 +152,7 @@ export const initiatePayment = async (req, res) => {
 
     const newBooking = new Booking({
       ...bookingData,
+      hotel_name: hotelDoc.hotel_name,
       total_amount: finalAmount,
       payment_status: 'pending'
     });

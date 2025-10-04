@@ -12,6 +12,7 @@ const BookingSchema = new mongoose.Schema({
     ref: 'Hotel',
     required: true
   },
+  hotel_name: { type: String },
   title: {
     type: String,
     required: true,
