@@ -2,6 +2,8 @@ import Booking from '../models/Booking.js';
 import Hotel from '../models/hotelModel.js';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import sendEmailWithTemplate from "../utils/sendEmail.js";
+import moment from "moment";
 
 // Load environment variables if not already loaded (useful for controller testing)
 if (process.env.NODE_ENV !== 'production') {
@@ -240,7 +242,39 @@ export const handleCallback = async (req, res) => {
 
           if (finalStatus === 'success') {
             console.log(`Payment confirmed for ${booking._id}. Sending confirmation email...`);
-            // Email logic (optional)
+             //  Send ZeptoMail Booking Confirmation
+            try {
+              await sendEmailWithTemplate({
+                to: booking.email,
+                name: booking.first_name,
+                templateKey: "2518b.554b0da719bc314.k1.15f59070-a0f2-11f0-9224-62df313bf14d.199ae148af7",
+                mergeInfo: {
+                  booking_id: booking.booking_id,
+                  hotel_name: booking.hotel?.hotel_name || "N/A",
+                  title: booking.title || "",
+                  first_name: booking.first_name,
+                  middle_name: booking.middle_name || "",
+                  last_name: booking.last_name || "",
+                  gender: booking.gender || "",
+                  email: booking.email,
+                  mobile: booking.mobile,
+                  company_name: booking.company_name || "",
+                  gst_number: booking.gst_number || "",
+                  address: booking.address || "",
+                  state: booking.state || "",
+                  check_in_date: moment(booking.check_in_date).format("DD-MM-YYYY"),
+                  check_out_date: moment(booking.check_out_date).format("DD-MM-YYYY"),
+                  room_type: booking.room_type,
+                  total_amount: booking.total_amount.toFixed(2),
+                  payment_status: booking.payment_status,
+                  instamojo_request_id: booking.instamojo_request_id || "",
+                  instamojo_payment_id: booking.instamojo_payment_id || "",
+                  year: new Date().getFullYear(),
+                },
+              });
+            } catch (emailErr) {
+              console.error("❌ Failed to send booking confirmation email:", emailErr);
+            }
           }
         } else {
           console.error('Instamojo API verification failed:', result.message || 'Unknown error');
