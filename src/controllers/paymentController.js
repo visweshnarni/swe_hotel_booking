@@ -124,28 +124,27 @@ export const initiatePayment = async (req, res) => {
     
     // 1. Create Date objects from the stored/received strings.
     // The JavaScript Date constructor will correctly interpret the GMT offset.
-    const checkIn = new Date(check_in_date); 
-    const checkOut = new Date(check_out_date);
+    // const checkIn = new Date(check_in_date); 
+    // const checkOut = new Date(check_out_date);
     
-    // 2. Calculate the difference in time (milliseconds)
-    const timeDiff = Math.abs(checkOut.getTime() - checkIn.getTime());
+    // // 2. Calculate the difference in time (milliseconds)
+    // const timeDiff = Math.abs(checkOut.getTime() - checkIn.getTime());
 
-    // 3. Calculate difference in days. 
-    // This calculation is SAFE here because timeDiff already accounts for the time zone 
-    // (e.g., if both dates start at 00:00:00 GMT+0530, the difference will be an exact multiple of 24 hours).
-    const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    // // 3. Calculate difference in days. 
+    // // This calculation is SAFE here because timeDiff already accounts for the time zone 
+    // // (e.g., if both dates start at 00:00:00 GMT+0530, the difference will be an exact multiple of 24 hours).
+    // const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
     
     // NOTE: This duration calculation assumes both dates start at the same time (00:00:00).
     // If the time components were different, the total_amount would be slightly inaccurate.
     // --- MODIFICATION END ---
     
-    const finalAmount = selectedRoom.price * diffDays;
+    // const finalAmount = selectedRoom.price * diffDays;
 
     
 
     const newBooking = new Booking({
       ...bookingData,
-      total_amount: finalAmount,
       payment_status: 'pending'
     });
     savedBooking = await newBooking.save();
