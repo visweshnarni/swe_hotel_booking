@@ -152,11 +152,13 @@ export const initiatePayment = async (req, res) => {
 
     const newBooking = new Booking({
       ...bookingData,
-      hotel_name: hotelDoc.hotel_name,
       total_amount: finalAmount,
       payment_status: 'pending'
     });
     savedBooking = await newBooking.save();
+
+    //  Fix: populate hotel for later use (emails, etc.)
+    savedBooking = await Booking.findById(savedBooking._id).populate('hotel');
     console.log("Booking being sent..............", savedBooking);
    const payload = {
   purpose: `SWE Pune: ${hotelDoc.hotel_name}`,  // use hotel name here
