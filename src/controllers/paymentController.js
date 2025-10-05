@@ -43,19 +43,19 @@ export const retryPayment = async (req, res) => {
 
     // 3. Prepare Instamojo Payload using saved booking data
     // Fetch hotel name through booking's hotel reference
-const hotelDoc = await Hotel.findById(bookingToRetry.hotel);
+    const hotelDoc = await Hotel.findById(bookingToRetry.hotel);
 
-if (!hotelDoc) {
-  return res.status(404).json({ message: 'Associated hotel not found.' });
-}
+    if (!hotelDoc) {
+      return res.status(404).json({ message: 'Associated hotel not found.' });
+    }
 
-const payload = {
-  purpose: `SWE Pune: ${hotelDoc.hotel_name} (Retry)`,
-  amount: bookingToRetry.total_amount.toFixed(2),
-  buyer_name: `${bookingToRetry.first_name} ${bookingToRetry.last_name || ''}`,
-  email: bookingToRetry.email,
-  redirect_url: `${BACKEND_BASE_URL}/api/payment/callback?booking_id=${bookingToRetry._id}`
-};
+    const payload = {
+      purpose: `SWE Pune: ${hotelDoc.hotel_name} (Retry)`,
+      amount: bookingToRetry.total_amount.toFixed(2),
+      buyer_name: `${bookingToRetry.first_name} ${bookingToRetry.last_name || ''}`,
+      email: bookingToRetry.email,
+      redirect_url: `${BACKEND_BASE_URL}/api/payment/callback?booking_id=${bookingToRetry._id}`
+    };
 
 
     // 4. Call Instamojo API to create a NEW payment request
@@ -119,7 +119,7 @@ export const initiatePayment = async (req, res) => {
     }
     // ... inside initiatePayment function
 
-// ... (Existing code before duration calculation)
+    // ... (Existing code before duration calculation)
 
     const selectedRoom = hotelDoc.room_types.find(rt => rt.name === room_type);
     if (!selectedRoom) {
@@ -128,12 +128,12 @@ export const initiatePayment = async (req, res) => {
 
     // --- MODIFICATION START ---
     // The dates are now strings like: "Wed Oct 01 2025 00:00:00 GMT+0530 (India Standard Time)"
-    
+
     // 1. Create Date objects from the stored/received strings.
     // The JavaScript Date constructor will correctly interpret the GMT offset.
-    const checkIn = new Date(check_in_date); 
+    const checkIn = new Date(check_in_date);
     const checkOut = new Date(check_out_date);
-    
+
     // 2. Calculate the difference in time (milliseconds)
     const timeDiff = Math.abs(checkOut.getTime() - checkIn.getTime());
 
@@ -141,14 +141,14 @@ export const initiatePayment = async (req, res) => {
     // This calculation is SAFE here because timeDiff already accounts for the time zone 
     // (e.g., if both dates start at 00:00:00 GMT+0530, the difference will be an exact multiple of 24 hours).
     const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    
+
     // NOTE: This duration calculation assumes both dates start at the same time (00:00:00).
     // If the time components were different, the total_amount would be slightly inaccurate.
     // --- MODIFICATION END ---
-    
+
     const finalAmount = selectedRoom.price * diffDays;
 
-    
+
 
     const newBooking = new Booking({
       ...bookingData,
@@ -157,16 +157,15 @@ export const initiatePayment = async (req, res) => {
     });
     savedBooking = await newBooking.save();
 
-    //  Fix: populate hotel for later use (emails, etc.)
-    savedBooking = await Booking.findById(savedBooking._id).populate('hotel');
-    console.log("Booking being sent..............", savedBooking);
-   const payload = {
-  purpose: `SWE Pune: ${hotelDoc.hotel_name}`,  // use hotel name here
-  amount: finalAmount.toFixed(2),
-  buyer_name: `${first_name} ${bookingData.last_name || ''}`,
-  email: email,
-  redirect_url: `${BACKEND_BASE_URL}/api/payment/callback?booking_id=${savedBooking._id}`
-};
+
+
+    const payload = {
+      purpose: `SWE Pune: ${hotelDoc.hotel_name}`,  // use hotel name here
+      amount: finalAmount.toFixed(2),
+      buyer_name: `${first_name} ${bookingData.last_name || ''}`,
+      email: email,
+      redirect_url: `${BACKEND_BASE_URL}/api/payment/callback?booking_id=${savedBooking._id}`
+    };
 
 
     const response = await axios.post(INSTAMOJO_URL, payload, {
@@ -184,7 +183,7 @@ export const initiatePayment = async (req, res) => {
 
       res.status(200).json({
         message: 'Payment initiated. Redirect to payment_url.',
-        bookingId: savedBooking,
+        bookingId: savedBooking._id,
         payment_url: payment_request.longurl
       });
 
@@ -219,8 +218,6 @@ export const handleCallback = async (req, res) => {
   const { booking_id } = req.query;
   const { payment_request_id, payment_id, payment_status } = req.query;
 
-  console.log('Instamojo Callback Received:', req.query);
-
   // Utility: Ensure a clean ID (never a URL, always string)
   function extractPaymentRequestId(val) {
     if (!val) return '';
@@ -229,7 +226,7 @@ export const handleCallback = async (req, res) => {
   }
 
   try {
-     //  FIXED: Populate hotel to access hotel_name
+    //  FIXED: Populate hotel to access hotel_name
     const booking = await Booking.findById(booking_id).populate('hotel');
 
     if (!booking) {
@@ -276,7 +273,7 @@ export const handleCallback = async (req, res) => {
 
           if (finalStatus === 'success') {
             console.log(`Payment confirmed for ${booking._id}. Sending confirmation email...`);
-             //  Send ZeptoMail Booking Confirmation
+            //  Send ZeptoMail Booking Confirmation
             try {
               await sendEmailWithTemplate({
                 to: booking.email,
@@ -324,13 +321,13 @@ export const handleCallback = async (req, res) => {
     }
 
     await booking.save();
-    console.log("Booking............", booking);
-
+    const hotelName = encodeURIComponent(booking.hotel?.hotel_name || "N/A");
     const redirectUrl =
       payment_status === 'Credit'
-        ? `${FRONTEND_BASE_URL}/booking-success?id=${booking._id}`
-        : `${FRONTEND_BASE_URL}/booking-failure?id=${booking._id}`;
+        ? `${FRONTEND_BASE_URL}/booking-success?id=${booking._id}&hotel=${hotelName}`
+        : `${FRONTEND_BASE_URL}/booking-failure?id=${booking._id}&hotel=${hotelName}`;
 
+    console.log("Redirecting to frontend:", redirectUrl);
     res.redirect(redirectUrl);
 
   } catch (error) {
@@ -338,4 +335,3 @@ export const handleCallback = async (req, res) => {
     res.redirect(`${FRONTEND_BASE_URL}/booking-error?message=InternalError`);
   }
 };
-
