@@ -218,6 +218,8 @@ export const handleCallback = async (req, res) => {
   const { booking_id } = req.query;
   const { payment_request_id, payment_id, payment_status } = req.query;
 
+  console.log('Instamojo Callback Received:', req.query);
+
   // Utility: Ensure a clean ID (never a URL, always string)
   function extractPaymentRequestId(val) {
     if (!val) return '';
@@ -321,13 +323,13 @@ export const handleCallback = async (req, res) => {
     }
 
     await booking.save();
-    const hotelName = encodeURIComponent(booking.hotel?.hotel_name || "N/A");
+
+
     const redirectUrl =
       payment_status === 'Credit'
-        ? `${FRONTEND_BASE_URL}/booking-success?id=${booking._id}&hotel=${hotelName}`
-        : `${FRONTEND_BASE_URL}/booking-failure?id=${booking._id}&hotel=${hotelName}`;
+        ? `${FRONTEND_BASE_URL}/booking-success?id=${booking._id}`
+        : `${FRONTEND_BASE_URL}/booking-failure?id=${booking._id}`;
 
-    console.log("Redirecting to frontend:", redirectUrl);
     res.redirect(redirectUrl);
 
   } catch (error) {
@@ -335,3 +337,4 @@ export const handleCallback = async (req, res) => {
     res.redirect(`${FRONTEND_BASE_URL}/booking-error?message=InternalError`);
   }
 };
+
