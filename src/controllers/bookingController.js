@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+
 import Booking from '../models/Booking.js';
 import Hotel from '../models/hotelModel.js';
 
@@ -22,6 +24,10 @@ export const createBooking = async (req, res) => {
       room_type
     } = req.body;
 
+    // Validate hotel ID
+    if (!mongoose.Types.ObjectId.isValid(hotel)) {
+      return res.status(400).json({ message: 'Invalid hotel ID' });
+    }
     // Find hotel
     const hotelDoc = await Hotel.findById(hotel);
     if (!hotelDoc) {
@@ -36,7 +42,7 @@ export const createBooking = async (req, res) => {
 
     // Prepare booking data
     const booking = new Booking({
-      hotel,
+      hotel: hotelDoc._id,
       title,
       first_name,
       middle_name,

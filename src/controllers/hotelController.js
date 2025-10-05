@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+
 import Hotel from '../models/hotelModel.js';
 
 // Get all hotels
